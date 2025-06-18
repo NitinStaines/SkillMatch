@@ -11,18 +11,32 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const authRoutes = require('./routes/auth');
-app.use('/auth', authRoutes);  
-
-app.get('/', (req, res) => {
-    res.send("API works");
-})
-
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');
   })
   .catch(err => console.log('MongoDB connection error:', err));
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+app.get('/', (req, res) => {
+    res.send("API works");
+})
+
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+
+const userRoutes = require('./routes/user');
+app.use('/api/user', userRoutes);
+
+const skillRoutes = require('./routes/skill');
+app.use('api/skill', skillRoutes);
+
+const skillProfileRoutes = require('./routes/skillProfile');
+app.use('api/skillProfile', skillProfileRoutes);
+
 
 
 
