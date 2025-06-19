@@ -5,11 +5,11 @@ const SkillProfile = require('../models/SkillProfile');
 
 router.post('/create', auth, async (req, res) => {
     try {
-        const { skillstoTeach, skillsToLearn } = req.body;
+        const { skillsToTeach, skillsToLearn } = req.body;
 
         const newProfile = new SkillProfile({
             user: req.user,
-            skillstoTeach: skillstoTeach,
+            skillsToTeach: skillsToTeach,
             skillsToLearn: skillsToLearn
         });
 

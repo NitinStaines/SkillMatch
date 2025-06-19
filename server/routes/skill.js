@@ -1,7 +1,7 @@
 const express = require('express');
 const Skill = require('../models/Skill');
 const router = express.Router();
-const skillProfile = require('../models/skilProfile');
+const auth = require('../middleware/auth');
 
 router.post('/add', auth, async (req, res) => {
     try{

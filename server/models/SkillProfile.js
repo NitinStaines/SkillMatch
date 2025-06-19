@@ -18,4 +18,4 @@ const skillProfileSchema = new mongoose.Schema({
   });
   
 
-module.exports = mongoose.model('SkillProfile', skillProfileSchema);
+module.exports = mongoose.models.SkillProfile || mongoose.model('SkillProfile', skillProfileSchema);

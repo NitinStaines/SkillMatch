@@ -32,10 +32,13 @@ const userRoutes = require('./routes/user');
 app.use('/api/user', userRoutes);
 
 const skillRoutes = require('./routes/skill');
-app.use('api/skill', skillRoutes);
+app.use('/api/skill', skillRoutes);
 
 const skillProfileRoutes = require('./routes/skillProfile');
-app.use('api/skillProfile', skillProfileRoutes);
+app.use('/api/skillProfile', skillProfileRoutes);
+
+const matchRoutes = require('./routes/match');
+app.use('/api/match', matchRoutes);
 
 
 
