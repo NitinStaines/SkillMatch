@@ -3,59 +3,37 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const SkillProfile = require('../models/SkillProfile');
 
-router.post('/create', auth, async (req, res) => {
-    try {
-        const { skillsToTeach, skillsToLearn } = req.body;
-
-        const newProfile = new SkillProfile({
-            user: req.user,
-            skillsToTeach: skillsToTeach,
-            skillsToLearn: skillsToLearn
-        });
-
-        await newProfile.save();
-        res.status(200).json({message: "Profile created", profile: newProfile});
-    }
-    catch(err){
-        console.error(err);
-        res.status(500).json({ message: 'Internal Server Error' });
-
-    }
-});
-
 router.put('/update', auth, async (req, res) => {
-    try {
-        const { skillstoTeach, skillsToLearn } = req.body;
+  try {
+    const { skillsToTeach, skillsToLearn, bio } = req.body;
 
-        const updated = await SkillProfile.findOneAndUpdate(
-            {user: req.user},
-            {skillstoTeach, skillsToLearn},
-            {new: true, upsert: true},
-        );
+    const updated = await SkillProfile.findOneAndUpdate(
+      { user: req.user },
+      { skillsToTeach, skillsToLearn, bio },
+      { new: true, upsert: true }
+    );
 
-        res.status(200).json({message: "Profile updated", profile: updated});
-    }
-    catch(err){
-        console.error(err);
-        res.status(500).json({ message: 'Internal Server Error' });
-
-    }
+    res.status(200).json({ message: "Profile updated", profile: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 });
 
 router.get('/me', auth, async (req, res) => {
     try {
-        const profile = await SkillProfile.findOne({
-            user: req.user
-        }).populate('skillsToTeach')
-        .populate('skillsToLearn');
-
-        res.status(200).json({message: 'Profile fetched', profile: profile});
+        const profile = await SkillProfile.findOne({ user: req.user })
+        .populate('skillsToTeach', 'name')
+        .populate('skillsToLearn', 'name')
+        .populate('bio');
+      if (!profile) {
+        return res.status(404).json({ message: 'Profile not found' });
+      }
+      res.status(200).json({ message: 'Profile fetched', profile });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Internal Server Error' });
     }
-    catch(err){
-        console.error(err);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-});
+  });
 
 module.exports = router;
-

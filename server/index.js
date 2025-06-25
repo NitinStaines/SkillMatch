@@ -40,8 +40,10 @@ app.use('/api/skillProfile', skillProfileRoutes);
 const matchRoutes = require('./routes/match');
 app.use('/api/match', matchRoutes);
 
+app.use('/uploads', express.static('uploads'));
+
 const connectionRoutes = require('./routes/connectionRequest');
-app.use('/api/connection', connectionRoutes);
+app.use('/api/connections', connectionRoutes);
 
 const chatRoutes = require('./routes/chat');
 app.use('/api/chat', chatRoutes);
