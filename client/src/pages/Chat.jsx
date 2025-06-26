@@ -1,51 +1,49 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from "react";
 import {
-  Container,
-  Typography,
-  Card,
-  CardContent,
   Box,
-  Divider,
-  TextField,
   Button,
-} from '@mui/material';
-import Icon from '@mui/material/Icon';
-import Stack from '@mui/material/Stack';
-import { green } from '@mui/material/colors';
-import FadeLoader from '../components/FadeLoader';
-
-import axios from 'axios';
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import SendIcon from "@mui/icons-material/Send";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import FadeLoader from "../components/FadeLoader";
+import Navbar from "../components/Navbar";
 
 const Chat = () => {
   const { roomId } = useParams();
   const [messages, setMessages] = useState([]);
-  const [userId, setUserId] = useState('');
-  const [newMessage, setNewMessage] = useState('');
+  const [userId, setUserId] = useState("");
+  const [newMessage, setNewMessage] = useState("");
   const [file, setFile] = useState(null);
+  const [chatWith, setChatWith] = useState(null);
   const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   const headers = { Authorization: `${token}` };
 
   const fetchMessages = async () => {
-
     try {
-        const chatRes = await axios.get(`http://localhost:5000/api/chat/${roomId}`, {
-            headers,
-          });
-          setMessages(chatRes.data.messages || []);
-        } catch (err) {
-          console.error('Error fetching chat data:', err);
-        }
+      const res = await axios.get(`http://localhost:5000/api/chat/${roomId}`, {
+        headers,
+      });
+      setMessages(res.data.messages || []);
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+    }
   };
 
   const fetchChatData = async () => {
     try {
-      const userRes = await axios.get('http://localhost:5000/api/auth/me', {
+      const userRes = await axios.get("http://localhost:5000/api/auth/me", {
         headers,
       });
-
       setUserId(userRes.data.user._id);
 
       const chatRes = await axios.get(`http://localhost:5000/api/chat/${roomId}`, {
@@ -53,10 +51,38 @@ const Chat = () => {
       });
 
       setMessages(chatRes.data.messages || []);
+      setChatWith(chatRes.data.chatWith || null);
     } catch (err) {
-      console.error('Error fetching chat data:', err);
+      console.error("Error fetching chat data:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() && !file) return;
+
+    const formData = new FormData();
+    formData.append("text", newMessage);
+    if (file) formData.append("attachment", file);
+
+    try {
+      await axios.post(
+        `http://localhost:5000/api/chat/${roomId}/send`,
+        formData,
+        {
+          headers: {
+            Authorization: `${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setNewMessage("");
+      setFile(null);
+      await fetchMessages(); // Re-fetch to ensure proper alignment
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      alert("Message sending failed.");
     }
   };
 
@@ -64,130 +90,194 @@ const Chat = () => {
     fetchChatData();
   }, [roomId]);
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() && !file) return;
-
-    const formData = new FormData();
-    formData.append('text', newMessage);
-    if (file) formData.append('attachment', file);
-
-    try {
-      const res = await axios.post(
-        `http://localhost:5000/api/chat/${roomId}/send`,
-        formData,
-        {
-          headers: {
-            Authorization: `${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
-      fetchMessages();
-      setMessages((prev) => [...prev, res.data.message]);
-      setNewMessage('');
-      setFile(null);
-    } catch (err) {
-      console.error('Failed to send message:', err);
-      alert('Message sending failed.');
-    }
-  };
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>Chat Room</Typography>
-      {loading ? <FadeLoader /> : (
-        <>
-          <Divider sx={{ my: 2 }} />
-
-          <Box mb={4} sx={{ minHeight: '300px' }}>
-            {messages.length === 0 ? (
-              <Typography variant="body1" color="text.secondary">
-                No messages in this chat room yet.
-              </Typography>
-            ) : (
-                messages.map((msg) => (
-                    <Card
-                      key={msg._id}
-                      sx={{
-                        mb: 2,
-                        backgroundColor: msg.sender._id === userId ? '#e3f2fd' : '#f5f5f5',
-                        textAlign: msg.sender._id === userId ? 'right' : 'left'
-                      }}
-                    >
-                      <CardContent>
-                        <Typography variant="subtitle2" color="text.secondary">
-                          {msg.sender._id === userId ? 'You' : msg.sender.name}
-                        </Typography>
-                  
-                        {msg.text && (
-                          <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
-                            {msg.text}
-                          </Typography>
-                        )}
-                  
-                        {msg.attachment && msg.attachment.filetype.startsWith('image/') && (
-                          <Box mt={1}>
-                            <img
-                              src={`http://localhost:5000${msg.attachment.url}`}
-                              alt={msg.attachment.filename}
-                              style={{
-                                maxWidth: '100%',
-                                maxHeight: '300px',
-                                borderRadius: '8px',
-                                marginTop: '8px'
-                              }}
-                            />
-                          </Box>
-                        )}
-                  
-                        {msg.attachment && !msg.attachment.filetype.startsWith('image/') && (
-                          <Box mt={1}>
-                            <a
-                              href={`http://localhost:5000${msg.attachment.url}`}
-                              download={msg.attachment.filename}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {msg.attachment.filename}
-                            </a>
-                          </Box>
-                        )}
-                  
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(msg.createdAt).toLocaleString()}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))
+    <>
+      <Navbar />
+      <Box
+        sx={{
+          width: "100%",
+          height: "calc(100vh - 64px)",
+          display: "flex",
+          flexDirection: "column",
+          background: "linear-gradient(270deg, rgba(17,0,38,1) 7%, rgba(0,9,66,1) 100%)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Header */}
+        <Box sx={{ px: 6, pt: 6, pb: 2 }}>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: "bold",
+                color: "white",
+              }}
+            >
+              {chatWith?.name || "Chat"}
+            </Typography>
+            {chatWith?._id && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => navigate(`/skillProfile/user/${chatWith._id}`)}
+              >
+                View Profile
+              </Button>
             )}
           </Box>
+        </Box>
 
-          <Divider sx={{ my: 2 }} />
+        {/* Scrollable Message Area */}
+        <Box
+          sx={{
+            flexGrow: 1,
+            px: 6,
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            pb: 2,
+          }}
+        >
+          {loading ? (
+            <FadeLoader />
+          ) : messages.length === 0 ? (
+            <Typography color="white">No messages yet.</Typography>
+          ) : (
+            messages.map((msg) => (
+              <Box
+                key={msg._id}
+                sx={{
+                  display: "flex",
+                  justifyContent:
+                    msg.sender._id === userId ? "flex-end" : "flex-start",
+                }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    maxWidth: "60%",
+                    p: 2,
+                    borderRadius:
+                      msg.sender._id === userId
+                        ? "24px 0px 0px 24px"
+                        : "0px 24px 24px 0px",
+                    bgcolor:
+                      msg.sender._id === userId
+                        ? "rgba(231, 254, 204, 0.97)"
+                        : "white",
+                    border: "0.5px solid rgba(128, 128, 128, 0.4)",
+                    color: "black",
+                  }}
+                >
+                  <Typography sx={{ fontSize: "16px" }}>
+                    {msg.text}
+                  </Typography>
 
-          {/* Message Input */}
-          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+                  {msg.attachment?.filetype?.startsWith("image/") && (
+                    <Box mt={1}>
+                      <img
+                        src={`http://localhost:5000${msg.attachment.url}`}
+                        alt={msg.attachment.filename}
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "300px",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    </Box>
+                  )}
+
+                  {msg.attachment &&
+                    !msg.attachment.filetype?.startsWith("image/") && (
+                      <Box mt={1}>
+                        <a
+                          href={`http://localhost:5000${msg.attachment.url}`}
+                          download={msg.attachment.filename}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "blue" }}
+                        >
+                          {msg.attachment.filename}
+                        </a>
+                      </Box>
+                    )}
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      gap: 0.5,
+                      mt: 1,
+                    }}
+                  >
+                    <Typography sx={{ fontSize: "12px", color: "gray" }}>
+                      {new Date(msg.createdAt).toLocaleTimeString()}
+                    </Typography>
+                    {msg.sender._id === userId && (
+                      <DoneAllIcon sx={{ fontSize: 16, color: "green" }} />
+                    )}
+                  </Box>
+                </Paper>
+              </Box>
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </Box>
+
+        {/* Input Area */}
+        <Box
+          sx={{
+            px: 6,
+            py: 2,
+          }}
+        >
+          <Paper
+            elevation={3}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              p: 2,
+              borderRadius: 2,
+            }}
+          >
+            <Button component="label" sx={{ minWidth: 0, p: 1 }}>
+              <AttachFileIcon fontSize="large" />
+              <input
+                type="file"
+                hidden
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+            </Button>
+
             <TextField
               fullWidth
+              placeholder="Enter your message..."
               variant="outlined"
-              label="Type your message"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              sx={{
+                mx: 2,
+                "& .MuiOutlinedInput-root": {
+                  bgcolor: "white",
+                  borderRadius: 1,
+                },
+              }}
             />
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files[0])}
-              accept="*"
-            />
-            
-            <Button variant="contained" onClick={handleSendMessage}>
-              Send
+
+            <Button sx={{ minWidth: 0, p: 1 }} onClick={handleSendMessage}>
+              <SendIcon fontSize="large" />
             </Button>
-          </Box>
-        </>
-      )}
-    </Container>
+          </Paper>
+        </Box>
+      </Box>
+    </>
   );
 };
 

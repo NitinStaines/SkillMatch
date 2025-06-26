@@ -1,56 +1,51 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Chip,
-  Container,
-  Card,
-  CardContent,
-  Autocomplete,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
+  Box, Typography, TextField, Button, Chip, Container,
+  Card, CardContent, Autocomplete, Dialog, DialogTitle,
+  DialogContent, DialogActions, IconButton
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import { motion } from 'framer-motion';
+import Navbar from "../components/Navbar";
 import FadeLoader from '../components/FadeLoader';
+import { useNavigate } from 'react-router-dom';
+
+const fadeIn = (delay = 0) => ({
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay } }
+});
 
 const SkillProfile = () => {
   const [skillsToTeach, setSkillsToTeach] = useState([]);
   const [skillsToLearn, setSkillsToLearn] = useState([]);
-  const [bio, setBio] = useState('')
-  const [teachInput, setTeachInput] = useState('');
-  const [learnInput, setLearnInput] = useState('');
+  const [bio, setBio] = useState('');
   const [allSkills, setAllSkills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [openDialog, setOpenDialog] = useState(false);
   const [pendingSkill, setPendingSkill] = useState('');
   const [pendingType, setPendingType] = useState('teach');
-  const [openDialog, setOpenDialog] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [editDialog, setEditDialog] = useState({ open: false, section: '' });
+
   const navigate = useNavigate();
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(true);
-  
+
+  const token = localStorage.getItem('token');
+
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('token');
       try {
         const profileRes = await axios.get('http://localhost:5000/api/skillProfile/me', {
-          headers: { Authorization: `${token}` }
+          headers: { Authorization: token }
         });
-        console.log(profileRes);
-        if (profileRes.data.profile) {
-          console.log(profileRes.data.profile.skillsToTeach);
-          setSkillsToTeach(profileRes.data.profile.skillsToTeach || []);
-          setSkillsToLearn(profileRes.data.profile.skillsToLearn || []);
-          setBio(profileRes.data.profile.bio || '');
-        }
-
         const skillRes = await axios.get('http://localhost:5000/api/skill');
-        setAllSkills(skillRes.data.skills);
+        const profile = profileRes.data.profile;
+
+        setSkillsToTeach(profile.skillsToTeach || []);
+        setSkillsToLearn(profile.skillsToLearn || []);
+        setBio(profile.bio || '');
+        setAllSkills(skillRes.data.skills || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -58,48 +53,32 @@ const SkillProfile = () => {
       }
     };
     fetchData();
-    console.log(skillsToLearn);
-    console.log(skillsToTeach);
   }, []);
 
-  const handleSubmit = async () => {
-    const token = localStorage.getItem('token');
+  const handleSave = async () => {
     try {
       await axios.put('http://localhost:5000/api/skillProfile/update', {
-        skillsToTeach: skillsToTeach,
-        skillsToLearn: skillsToLearn,
-        bio: bio,
+        skillsToTeach,
+        skillsToLearn,
+        bio
       }, {
-        headers: { Authorization: `${token}` }
+        headers: { Authorization: token }
       });
-      setError("");
-      setSuccess('Profile updated!');
+      setSuccess('Profile updated successfully!');
+      setError('');
     } catch (err) {
-      setSuccess("");
       setError('Failed to update profile.');
+      setSuccess('');
     }
   };
 
-  
-  const handleDeleteSkill = async (skillId, type) => {
+  const handleDeleteSkill = (id, type) => {
     if (type === 'teach') {
-      setSkillsToTeach(skillsToTeach.filter(skill => skill._id !== skillId));
-    } else if (type === 'learn') {
-      setSkillsToLearn(skillsToLearn.filter(skill => skill._id !== skillId));
+      setSkillsToTeach(skillsToTeach.filter(skill => skill._id !== id));
+    } else {
+      setSkillsToLearn(skillsToLearn.filter(skill => skill._id !== id));
     }
-    const token = localStorage.getItem('token');
-    try {
-      await axios.put('http://localhost:5000/api/skillProfile/update', {
-        skillsToTeach: skillsToTeach,
-        skillsToLearn: skillsToLearn,
-        bio: bio,
-      }, {
-        headers: { Authorization: `${token}` }
-      })
-  }catch (err) {
-    setSuccess("");
-    setError('Failed to update profile.');
-  }};
+  };
 
   const requestAddSkill = (value, type) => {
     setPendingSkill(value);
@@ -110,119 +89,211 @@ const SkillProfile = () => {
   const confirmAddSkill = () => {
     navigate('/addSkill', { state: { value: pendingSkill, type: pendingType } });
   };
-  
 
   return (
-    <Container maxWidth="md">
-      {loading ? <FadeLoader /> : (
-        <Box my={4}>
-          <Typography variant="h4" gutterBottom>Your Skill Profile</Typography>
+    <>
+      <Navbar />
+      <Box
+        sx={{
+          minHeight: "100vh",
+          background: "linear-gradient(270deg, rgba(17,0,38,1) 7%, rgba(0,9,66,1) 100%)",
+          color: "white",
+          py: 8,
+          transition: 'filter 0.3s ease',
+          filter: editDialog.open ? 'blur(5px)' : 'none',
+        }}
+      >
+        <Container maxWidth="md">
+          {loading ? <FadeLoader /> : (
+            <motion.div variants={fadeIn(0.3)} initial="hidden" animate="visible">
+              <Typography variant="h2" sx={{ fontWeight: "bold", mb: 4, textAlign: "center" }}>
+                Your <span style={{ color: "#4caf50" }}>Skill Profile</span>
+              </Typography>
 
-          {/* Teach Section */}
-          <Card variant="outlined" sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6">Skills You Can Teach</Typography>
-              <Autocomplete
-                options={allSkills}
-                getOptionLabel={(option) => option.name}
-                value={skillsToTeach.find(s => s._id === teachInput) || null}
-                onChange={(e, value) => {
-                  if (value && !skillsToTeach.includes(value)) {
-                    if (allSkills.includes(value)) {
+              {/* TEACH */}
+              <Card sx={{ backgroundColor: "rgba(255,255,255,0.05)", mb: 4 }}>
+                <CardContent>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: "white",
+                mr: 2,
+              }}
+            >
+              Your skills:
+            </Typography>
+                    <IconButton onClick={() => setEditDialog({ open: true, section: 'teach' })}>
+                      <EditIcon sx={{ color: "white" }} />
+                    </IconButton>
+                  </Box>
+                  <Box mt={2}>
+                    {skillsToTeach.map(skill => (
+                      <Chip
+                        key={skill._id}
+                        label={skill.name}
+                        onDelete={() => handleDeleteSkill(skill._id, 'teach')}
+                        sx={{ mr: 1, mb: 1, bgcolor: "#4caf50", color: "white" }}
+                      />
+                    ))}
+                  </Box>
+                </CardContent>
+              </Card>
+
+              {/* LEARN */}
+              <Card sx={{ backgroundColor: "rgba(255,255,255,0.05)", mb: 4 }}>
+                <CardContent>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: "white",
+                mr: 2,
+              }}
+            >
+              Skills you want to learn:
+            </Typography>
+                    <IconButton onClick={() => setEditDialog({ open: true, section: 'learn' })}>
+                      <EditIcon sx={{ color: "white" }} />
+                    </IconButton>
+                  </Box>
+                  <Box mt={2}>
+                    {skillsToLearn.map(skill => (
+                      <Chip
+                        key={skill._id}
+                        label={skill.name}
+                        onDelete={() => handleDeleteSkill(skill._id, 'learn')}
+                        sx={{ mr: 1, mb: 1, bgcolor: "#2196f3", color: "white" }}
+                      />
+                    ))}
+                  </Box>
+                </CardContent>
+              </Card>
+
+              {/* BIO */}
+              <Card sx={{ backgroundColor: "rgba(255,255,255,0.05)", mb: 4 }}>
+                <CardContent>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: "white",
+                mr: 2,
+              }}
+            >
+              Your bio:
+            </Typography>
+                    <IconButton onClick={() => setEditDialog({ open: true, section: 'bio' })}>
+                      <EditIcon sx={{ color: "white" }} />
+                    </IconButton>
+                  </Box>
+                  <Typography sx={{
+                fontWeight: 300,
+                color: "white",
+                mr: 2,
+              }}>{bio || "No bio provided yet."}</Typography>
+                </CardContent>
+              </Card>
+
+              {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
+              {success && <Typography color="success.main" sx={{ mb: 2 }}>{success}</Typography>}
+
+              <Button variant="contained" onClick={handleSave} sx={{ bgcolor: "#4caf50" }}>
+                Save Profile
+              </Button>
+            </motion.div>
+          )}
+        </Container>
+      </Box>
+
+      <Dialog
+        open={editDialog.open}
+        onClose={() => setEditDialog({ open: false, section: '' })}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            p: 3,
+            background: "linear-gradient(135deg, #ffffff 0%, #e0f7fa 100%)",
+            boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.3)",
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, color: "#0A1172" }}>
+          Edit {editDialog.section === 'bio' ? 'Bio' : `Skills to ${editDialog.section === 'teach' ? 'Teach' : 'Learn'}`}
+        </DialogTitle>
+
+        <DialogContent>
+          {editDialog.section === 'bio' ? (
+            <TextField
+              fullWidth
+              multiline
+              minRows={4}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Write something about yourself..."
+              sx={{ mt: 2 }}
+            />
+          ) : (
+            <Autocomplete
+              options={allSkills}
+              getOptionLabel={(option) => option.name}
+              onChange={(e, value) => {
+                if (value && !(editDialog.section === 'teach' ? skillsToTeach : skillsToLearn).some(s => s._id === value._id)) {
+                  if (allSkills.includes(value)) {
+                    if (editDialog.section === 'teach') {
                       setSkillsToTeach([...skillsToTeach, value]);
                     } else {
-                      requestAddSkill(value, 'teach');
-                    }
-                  }
-                  setTeachInput(value ? value._id : '');
-                }}
-                renderInput={(params) => (
-                  <TextField {...params} label="Select skill to teach" fullWidth />
-                )}
-              />
-              <Box mt={2}>
-              {skillsToTeach.map(skill => (
-                <Chip
-                  key={skill._id}
-                  label={skill.name}
-                  onDelete={() => handleDeleteSkill(skill._id, 'teach')}
-                  sx={{ mr: 1, mb: 1 }}
-                />
-              ))}
-              </Box>
-            </CardContent>
-          </Card>
-
-          {/* Learn Section */}
-          <Card variant="outlined" sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6">Skills You Want to Learn</Typography>
-              <Autocomplete
-                options={allSkills}
-                getOptionLabel={(option) => option.name}
-                value={skillsToLearn.find(s => s._id === learnInput) || null}
-                onChange={(e, value) => {
-                  if (value && !skillsToLearn.includes(value)) {
-                    console.log(value);
-                    if (allSkills.includes(value)) {
                       setSkillsToLearn([...skillsToLearn, value]);
-                    } else {
-                      requestAddSkill(value, 'learn');
                     }
+                  } else {
+                    requestAddSkill(value, editDialog.section);
                   }
-                  setLearnInput(value ? value._id : '');
-                }}
-                renderInput={(params) => (
-                  <TextField {...params} label="Select skill to learn" fullWidth />
-                )}
-              />
-              <Box mt={2}>
-              {skillsToLearn.map(skill => (
-                <Chip
-                  key={skill._id}
-                  label={skill.name}
-                  onDelete={() => handleDeleteSkill(skill._id, 'learn')}
-                  sx={{ mr: 1, mb: 1 }}
-                />
-              ))}
-              </Box>
-            </CardContent>
-          </Card>
+                }
+              }}
+              renderInput={(params) => (
+                <TextField {...params} label="Add skill" fullWidth sx={{ mt: 2 }} />
+              )}
+            />
+          )}
+        </DialogContent>
 
-          <Card variant="outlined" sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6">Your Bio</Typography>
-              <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                placeholder="Write a short summary about yourself..."
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-              />
-            </CardContent>
-          </Card>
+        <DialogActions sx={{ px: 3 }}>
+          <Button onClick={() => setEditDialog({ open: false, section: '' })} sx={{ color: "#0A1172" }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            sx={{
+              background: "#4CAF50",
+              color: "#fff",
+              '&:hover': {
+                backgroundColor: '#45a045',
+              },
+            }}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-          {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
-          {success && <Typography color="primary" sx={{ mb: 2 }}>{success}</Typography>}
-
-          <Button variant="contained" onClick={handleSubmit}>Save Profile</Button>
-
-          <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-          <DialogTitle>New Skill</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              The skill "{pendingSkill}" doesn't exist. Do you want to add it?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-            <Button onClick={confirmAddSkill} variant="contained">Add Skill</Button>
-          </DialogActions>
-        </Dialog>
-        </Box>
-      )}
-    </Container>
+      {/* SKILL ADD DIALOG */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>New Skill</DialogTitle>
+        <DialogContent>
+          This skill "{pendingSkill}" doesn't exist. Do you want to add it?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={confirmAddSkill}>Add Skill</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

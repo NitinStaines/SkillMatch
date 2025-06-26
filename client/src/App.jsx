@@ -10,27 +10,82 @@ import AddSkill from './pages/AddSkill'
 import ChatRooms from './pages/ChatRooms';
 import Chat from './pages/Chat';
 import Match from './pages/Match';
+import PrivateRoute from "./components/PrivateRoute";
+import ViewProfile from './pages/ViewProfile';
 
 const isAuthenticated = () => !!localStorage.getItem('token');
 
 function App() {
-  return (
-    <>
-    <Navbar />
+    return (
     <Routes>
+      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<Login />} />
 
-      <Route path='/register' element={<Register />}/>
-      <Route path='/login' element={<Login />}/>
-      <Route path='/dashboard' element={isAuthenticated() ? <Dashboard /> : <Navigate to='/login' />}/>
-      <Route path='/connections' element={isAuthenticated() ? <Connection /> : <Navigate to='/login' />}/>
-      <Route path='/skillProfile' element={isAuthenticated() ? <SkillProfile /> : <Navigate to='/login' />}/>
-      <Route path='/addSkill' element={isAuthenticated() ? <AddSkill /> : <Navigate to='/login' />}/>
-      <Route path='/chatRooms' element={isAuthenticated() ? <ChatRooms /> : <Navigate to='/login' />}/>
-      <Route path='/chat/:roomId' element={isAuthenticated() ? <Chat /> : <Navigate to='/login' />}/>
-      <Route path='/match' element={isAuthenticated() ? <Match /> : <Navigate to='/login' />}/>
-
+      <Route
+        path="/dashboard"
+        element={
+          <PrivateRoute>
+            <Dashboard />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/connections"
+        element={
+          <PrivateRoute>
+            <Connection />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/skillProfile"
+        element={
+          <PrivateRoute>
+            <SkillProfile />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/addSkill"
+        element={
+          <PrivateRoute>
+            <AddSkill />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/chatRooms"
+        element={
+          <PrivateRoute>
+            <ChatRooms />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/chat/:roomId"
+        element={
+          <PrivateRoute>
+            <Chat />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/match"
+        element={
+          <PrivateRoute>
+            <Match />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="skillProfile/user/:userId"
+        element={
+          <PrivateRoute>
+            <ViewProfile />
+          </PrivateRoute>
+        }
+      />
     </Routes>
-    </>
   );
 }
 

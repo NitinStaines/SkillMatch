@@ -105,8 +105,20 @@ router.get('/:roomId', auth, async (req, res) => {
       const messages = await Message.find({ chatRoom: roomId })
         .sort({ createdAt: 1 })
         .populate('sender', 'name email');
-  
-      res.status(200).json({ message: 'Messages fetched', messages });
+
+        const getChatWith = (messages, myUserId) => {
+          for (const msg of messages) {
+            const sender = msg.sender;
+            if (sender && sender._id.toString() !== myUserId.toString()) {
+              return sender;
+            }
+          }
+          return null;
+        };
+        
+        const chatWith = getChatWith(messages, req.user);
+        console.log(chatWith);
+      res.status(200).json({ message: 'Messages fetched', messages , chatWith});
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Internal Server Error' });
