@@ -5,6 +5,10 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User")
 const auth = require('../middleware/auth')
 
+// Health check endpoint
+router.get('/health', (req, res) => {
+  res.status(200).json({ message: 'Server is running' });
+});
 
 router.post('/register', async (req, res) => {
     try{

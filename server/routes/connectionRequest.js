@@ -42,11 +42,11 @@ router.get('/my', auth, async (req, res) => {
   }
 });
 
-router.post('/send', auth, async (req, res) => {
+router.post('/send/:id', auth, async (req, res) => {
     try {
-        const { toUserName } = req.body;
+        const userId = req.params.id;
 
-        const toUser = await User.findOne({ name: toUserName });
+        const toUser = await User.findById(userId);
         if (!toUser) {
             return res.status(400).json({ message: 'User not found.' });
         }
@@ -86,7 +86,7 @@ router.post('/send', auth, async (req, res) => {
 
         await newConnection.save();
 
-        res.status(200).json({ message: `Request sent to ${toUserName}` });
+        res.status(200).json({ message: `Request sent to ${toUser.name}` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal Server Error' });
@@ -188,7 +188,6 @@ router.delete('/remove/:id', auth, async (req, res) => {
     const otherUserId = req.params.id;
     const currentUserId = req.user;
 
-    // Delete the connection request in either direction if accepted
     const connection = await ConnectionRequest.findOneAndDelete({
       status: 'accepted',
       $or: [

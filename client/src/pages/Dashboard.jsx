@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
-  AppBar,
   Box,
   Button,
   Card,
-  Container,
-  Toolbar,
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -16,20 +13,13 @@ import SearchIcon from "@mui/icons-material/Search";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [connectionsCount, setConnectionsCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  const navItems = [
-    { name: "Dashboard", icon: <DashboardIcon />, selected: true },
-    { name: "Skill Profile", icon: <PersonIcon /> },
-    { name: "Chat Rooms", icon: <ChatIcon /> },
-    { name: "Find Matches", icon: <SearchIcon /> },
-    { name: "Connections", icon: <AddIcon /> },
-  ];
 
   const dashboardCards = [
     {
@@ -58,15 +48,6 @@ const Dashboard = () => {
     },
   ];
 
-  const fadeIn = (delay = 0) => ({
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, delay },
-    },
-  });
-
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
@@ -85,42 +66,39 @@ const Dashboard = () => {
         setConnectionsCount(connectionsRes.data.connections.length);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, []);
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        minHeight: "100vh",
-        background:
-          "linear-gradient(270deg, rgba(17,0,38,1) 7%, rgba(0,9,66,1) 100%)",
-        display: "flex",
-        flexWrap: true,
-        flexDirection: "column",
-      }}
+    <PageWrapper 
+      loading={loading}
+      loadingTitle="Loading Dashboard..."
+      loadingSubtitle="Fetching your profile and connections"
+      noContainer={true}
     >
-      <Navbar />
-      <Container
-        maxWidth="xl"
+      <Box
         sx={{
-          flexGrow: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          pb: 6,
+          py: 4,
+          px: 4,
         }}
       >
-        <motion.div variants={fadeIn(0.6)} initial="hidden" animate="visible">
+        <motion.div
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           <Typography
             variant="h1"
             sx={{
               color: "white",
               fontWeight: "bold",
-              fontSize: "6rem",
-              mt: 4,
+              fontSize: { xs: "3rem", md: "6rem" },
               mb: 6,
               textShadow: "0px 4px 4px rgba(0,0,0,0.25)",
               textAlign: "center",
@@ -137,63 +115,82 @@ const Dashboard = () => {
         </motion.div>
 
         <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              alignItems: "stretch",
-              gap: 4,
-              height: "100%",
-               // Ensures vertical fill
-            }}
-          >
-            {dashboardCards.map((card, index) => (
-              <motion.div
-                key={index}
-                variants={fadeIn(0.7 + index * 0.2)}
-                initial="hidden"
-                animate="visible"
-                style={{
-                  flex: "1 1 calc(50% - 2rem)",
-                  minWidth: "300px",
-                  maxWidth: "48%",
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            alignItems: "stretch",
+            gap: 4,
+          }}
+        >
+          {dashboardCards.map((card, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ 
+                duration: 0.6, 
+                delay: 0.4 + index * 0.1,
+                type: "spring",
+                stiffness: 100
+              }}
+              whileHover={{ 
+                scale: 1.05,
+                transition: { duration: 0.2 }
+              }}
+              style={{
+                flex: "1 1 calc(50% - 2rem)",
+                minWidth: "300px",
+                maxWidth: "48%",
+                display: "flex",
+              }}
+            >
+              <Card
+                onClick={card.onClick}
+                sx={{
+                  flexGrow: 1,
+                  bgcolor: "rgba(0,9,66,0.8)",
+                  borderRadius: "32px",
                   display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  p: 4,
+                  cursor: "pointer",
+                  width: "100%",
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(0,9,66,0.9)",
+                    boxShadow: "0 12px 40px rgba(0, 0, 0, 0.4)",
+                  },
                 }}
               >
-                <Card
-                  onClick={card.onClick}
-                  sx={{
-                    flexGrow: 1,
-                    bgcolor: "rgba(0,9,66,0.8)",
-                    borderRadius: "32px",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    p: 4,
-                    cursor: "pointer",
-                    width: "100%",
-                    "&:hover": {
-                      bgcolor: "rgba(0,9,66,0.9)",
-                      transform: "scale(1.02)",
-                      transition: "all 0.3s ease",
-                    },
-                  }}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
                 >
                   <Box sx={{ mb: 2 }}>{card.icon}</Box>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                >
                   <Typography variant="h5" sx={{ color: "white", fontWeight: 800, mb: 1, textAlign: "center" }}>
                     {card.title}
                   </Typography>
                   <Typography variant="body1" sx={{ color: "white", fontWeight: 400, textAlign: "center" }}>
                     {card.description}
                   </Typography>
-                </Card>
-              </motion.div>
-            ))}
-          </Box>
-
-      </Container>
-    </Box>
+                </motion.div>
+              </Card>
+            </motion.div>
+          ))}
+        </Box>
+      </Box>
+    </PageWrapper>
   );
 };
 

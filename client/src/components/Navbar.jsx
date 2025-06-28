@@ -67,7 +67,7 @@ const Navbar = () => {
           {/* Logo */}
           <Typography
             variant="h5"
-            onClick={() => navigate("/")}
+            onClick={() => isLoggedIn ? navigate("/dashboard") : navigate("/")}
             sx={{
               textDecoration: "none",
               color: "#4AFA7B",

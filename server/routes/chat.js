@@ -5,6 +5,7 @@ const path = require('path');
 const Message = require('../models/Message');
 const ChatRoom = require('../models/ChatRoom');
 const auth = require('../middleware/auth');
+const User = require('../models/User');
 
 const storage = multer.diskStorage({
   destination: 'uploads/',
@@ -123,6 +124,36 @@ router.get('/:roomId', auth, async (req, res) => {
       console.error(err);
       res.status(500).json({ message: 'Internal Server Error' });
     }
+});
+
+router.post('/username/:userId', auth, async (req, res) => {
+  try {
+    const myUserId = req.user;
+    const otherUserId = req.params.userId;
+
+    // Check if the other user exists
+    const otherUser = await User.findById(otherUserId);
+    if (!otherUser) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    let room = await ChatRoom.findOne({
+      participants: { $all: [myUserId, otherUserId], $size: 2 }
+    });
+
+    if (!room) {
+      room = new ChatRoom({ participants: [myUserId, otherUserId] });
+      await room.save();
+    }
+
+    res.status(200).json({
+      message: 'Room ID fetched',
+      roomId: room._id
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 });
   
 module.exports = router;

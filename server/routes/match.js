@@ -26,34 +26,38 @@ router.get('/', auth, async (req, res) => {
         .populate('skillsToTeach')
         .populate('skillsToLearn');
   
-      const matches = otherProfiles.map(profile => {
-        const filteredTeachSkills = categoryFilter
-          ? profile.skillsToTeach.filter(s => s.category?.toLowerCase() === categoryFilter)
-          : profile.skillsToTeach;
-  
-        const canLearnFromThem = filteredTeachSkills.filter(skill =>
-          skillsToLearnIds.includes(skill._id.toString())
-        );
-  
-        const canTeachThem = profile.skillsToLearn.filter(skill =>
-          skillsToTeachIds.includes(skill._id.toString())
-        );
-  
-        if (canLearnFromThem.length === 0 && canTeachThem.length === 0) return null;
-  
-        const scoreLearn = canLearnFromThem.length;
-        const scoreTeach = canTeachThem.length;
-        const totalPossible = skillsToLearnIds.length + skillsToTeachIds.length;
-        const matchScore = (((scoreLearn + scoreTeach) / totalPossible) * 100).toFixed(2);
-  
-        return {
-          user: profile.user,
-          matchPercentage: `${matchScore}%`,
-          canLearnFromThem,
-          canTeachThem,
-          fullProfile: profile
-        };
-      }).filter(Boolean);
+        const matches = otherProfiles
+          .map(profile => {
+            const filteredTeachSkills = categoryFilter
+              ? profile.skillsToTeach.filter(s => s.category?.toLowerCase() === categoryFilter)
+              : profile.skillsToTeach;
+        
+            const canLearnFromThem = filteredTeachSkills.filter(skill =>
+              skillsToLearnIds.includes(skill._id.toString())
+            );
+        
+            const canTeachThem = profile.skillsToLearn.filter(skill =>
+              skillsToTeachIds.includes(skill._id.toString())
+            );
+        
+            if (canLearnFromThem.length === 0 && canTeachThem.length === 0) return null;
+        
+            const scoreLearn = canLearnFromThem.length;
+            const scoreTeach = canTeachThem.length;
+            const totalPossible = skillsToLearnIds.length + skillsToTeachIds.length;
+            const matchScore = ((scoreLearn + scoreTeach) / totalPossible) * 100;
+        
+            return {
+              user: profile.user,
+              matchPercentage: `${matchScore.toFixed(2)}%`,
+              numericMatch: matchScore,
+              canLearnFromThem,
+              canTeachThem,
+              fullProfile: profile
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => b.numericMatch - a.numericMatch); 
   
       res.status(200).json({
         message: 'Matches found (unidirectional or bidirectional)',
