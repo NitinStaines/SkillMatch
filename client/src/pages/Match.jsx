@@ -66,7 +66,7 @@ const MatchCard = ({ match, index }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `http://localhost:5000/api/connections/send/${user._id}`,
+        `https://skillmatch-backend-cwdm.onrender.com/api/connections/send/${user._id}`,
         {},
         {
           headers: { Authorization: token }
@@ -378,7 +378,7 @@ const TopMatches = () => {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/match', {
+        const res = await axios.get('https://skillmatch-backend-cwdm.onrender.com/api/match', {
           headers,
         });
         setMatches(res.data.matches || []);

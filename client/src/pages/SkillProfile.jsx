@@ -36,10 +36,10 @@ const SkillProfile = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const profileRes = await axios.get('http://localhost:5000/api/skillProfile/me', {
+        const profileRes = await axios.get('https://skillmatch-backend-cwdm.onrender.com/api/skillProfile/me', {
           headers: { Authorization: token }
         });
-        const skillRes = await axios.get('http://localhost:5000/api/skill');
+        const skillRes = await axios.get('https://skillmatch-backend-cwdm.onrender.com/api/skill');
         const profile = profileRes.data.profile;
 
         setSkillsToTeach(profile.skillsToTeach || []);
@@ -57,7 +57,7 @@ const SkillProfile = () => {
 
   const handleSave = async () => {
     try {
-      await axios.put('http://localhost:5000/api/skillProfile/update', {
+      await axios.put('https://skillmatch-backend-cwdm.onrender.com/api/skillProfile/update', {
         skillsToTeach,
         skillsToLearn,
         bio

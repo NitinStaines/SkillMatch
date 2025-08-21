@@ -22,7 +22,7 @@ const ChatRooms = () => {
       try {
         const token = localStorage.getItem('token');
         const headers = { Authorization: `${token}` };
-        const res = await axios.get('http://localhost:5000/api/chat/my', {
+        const res = await axios.get('https://skillmatch-backend-cwdm.onrender.com/api/chat/my', {
           headers,
         });
         setChatRooms(res.data.rooms || []);

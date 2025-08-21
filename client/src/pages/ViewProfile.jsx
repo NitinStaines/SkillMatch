@@ -27,7 +27,7 @@ const ViewProfile = () => {
       try {
         const token = localStorage.getItem('token');
         const profileRes = await axios.get(
-        `http://localhost:5000/api/skillProfile/user/${userId}`,
+        `https://skillmatch-backend-cwdm.onrender.com/api/skillProfile/user/${userId}`,
         { headers: { Authorization: token } }
         );
         const profile = profileRes.data.profile;

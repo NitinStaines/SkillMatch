@@ -30,7 +30,7 @@ const Chat = () => {
 
   const fetchMessages = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/chat/${roomId}`, {
+      const res = await axios.get(`https://skillmatch-backend-cwdm.onrender.com/api/chat/${roomId}`, {
         headers,
       });
       setMessages(res.data.messages || []);
@@ -41,12 +41,12 @@ const Chat = () => {
 
   const fetchChatData = async () => {
     try {
-      const userRes = await axios.get("http://localhost:5000/api/auth/me", {
+      const userRes = await axios.get("https://skillmatch-backend-cwdm.onrender.com/api/auth/me", {
         headers,
       });
       setUserId(userRes.data.user._id);
 
-      const chatRes = await axios.get(`http://localhost:5000/api/chat/${roomId}`, {
+      const chatRes = await axios.get(`https://skillmatch-backend-cwdm.onrender.com/api/chat/${roomId}`, {
         headers,
       });
 
@@ -68,7 +68,7 @@ const Chat = () => {
 
     try {
       await axios.post(
-        `http://localhost:5000/api/chat/${roomId}/send`,
+        `https://skillmatch-backend-cwdm.onrender.com/api/chat/${roomId}/send`,
         formData,
         {
           headers: {
@@ -181,7 +181,7 @@ const Chat = () => {
                   {msg.attachment?.filetype?.startsWith("image/") && (
                     <Box mt={1}>
                       <img
-                        src={`http://localhost:5000${msg.attachment.url}`}
+                        src={`https://skillmatch-backend-cwdm.onrender.com${msg.attachment.url}`}
                         alt={msg.attachment.filename}
                         style={{
                           maxWidth: "100%",
@@ -196,7 +196,7 @@ const Chat = () => {
                     !msg.attachment.filetype?.startsWith("image/") && (
                       <Box mt={1}>
                         <a
-                          href={`http://localhost:5000${msg.attachment.url}`}
+                          href={`https://skillmatch-backend-cwdm.onrender.com${msg.attachment.url}`}
                           download={msg.attachment.filename}
                           target="_blank"
                           rel="noopener noreferrer"

@@ -41,13 +41,13 @@ const Connections = () => {
 
   const fetchAll = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/connections/my', { headers });
+      const res = await axios.get('https://skillmatch-backend-cwdm.onrender.com/api/connections/my', { headers });
       setConnections(res.data.connections);
 
-      const incomingReqs = await axios.get('http://localhost:5000/api/connections/incoming', { headers });
+      const incomingReqs = await axios.get('https://skillmatch-backend-cwdm.onrender.com/api/connections/incoming', { headers });
       setIncoming(incomingReqs.data.requests);
 
-      const sentReqs = await axios.get('http://localhost:5000/api/connections/sent', { headers });
+      const sentReqs = await axios.get('https://skillmatch-backend-cwdm.onrender.com/api/connections/sent', { headers });
       setSent(sentReqs.data.requests);
     } catch (err) {
       console.error('Failed to fetch connections:', err);
@@ -68,7 +68,7 @@ const Connections = () => {
   
     try {
       await axios.post(
-        'http://localhost:5000/api/connections/send',
+        'https://skillmatch-backend-cwdm.onrender.com/api/connections/send',
         { toUserName: searchUser },
         { headers }
       );
@@ -82,7 +82,7 @@ const Connections = () => {
   
   const respondToRequest = async (requestId, status) => {
     try {
-      await axios.post(`http://localhost:5000/api/connections/respond/${requestId}`, { status }, { headers });
+      await axios.post(`https://skillmatch-backend-cwdm.onrender.com/api/connections/respond/${requestId}`, { status }, { headers });
       setError("");
       fetchAll();
     } catch (err) {
@@ -92,7 +92,7 @@ const Connections = () => {
 
   const removeRequest = async (removeId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/connections/remove/${removeId}`, { headers })
+      await axios.delete(`https://skillmatch-backend-cwdm.onrender.com/api/connections/remove/${removeId}`, { headers })
       setError("");
       fetchAll();
     }
@@ -106,7 +106,7 @@ const Connections = () => {
     try {
 
       const res = await axios.post(
-        `http://localhost:5000/api/chat/username/${otherUserId}`,
+        `https://skillmatch-backend-cwdm.onrender.com/api/chat/username/${otherUserId}`,
         {},
         { headers }
       );

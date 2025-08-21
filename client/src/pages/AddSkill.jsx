@@ -24,7 +24,7 @@ const AddSkill = () => {
   const handleAdd = async () => {
     const token = localStorage.getItem('token');
     try {
-      await axios.post('http://localhost:5000/api/skill/add', {
+      await axios.post('https://skillmatch-backend-cwdm.onrender.com/api/skill/add', {
         name: skillName,
         category
       }, {
