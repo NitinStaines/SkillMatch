@@ -118,7 +118,6 @@ router.get('/:roomId', auth, async (req, res) => {
         };
         
         const chatWith = getChatWith(messages, req.user);
-        console.log(chatWith);
       res.status(200).json({ message: 'Messages fetched', messages , chatWith});
     } catch (err) {
       console.error(err);

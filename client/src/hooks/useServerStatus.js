@@ -10,7 +10,7 @@ const useServerStatus = () => {
     setIsChecking(true);
     try {
       // Try to make a simple request to check if server is available
-      await axios.get('http://localhost:5000/api/auth/health', {
+      await axios.get('https://skillmatch-backend-cwdm.onrender.com/api/auth/health', {
         timeout: 5000 // 5 second timeout
       });
       setIsServerOnline(true);

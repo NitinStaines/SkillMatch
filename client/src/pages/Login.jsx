@@ -32,7 +32,7 @@ const Login = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", form);
+      const res = await axios.post("https://skillmatch-backend-cwdm.onrender.com/api/auth/login", form);
       localStorage.setItem("token", res.data.token);
       setError("");
       navigate("/dashboard");

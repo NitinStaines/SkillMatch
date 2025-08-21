@@ -17,12 +17,11 @@ const ChatRooms = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `${token}` };
-
   useEffect(() => {
     const fetchChatRooms = async () => {
       try {
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `${token}` };
         const res = await axios.get('http://localhost:5000/api/chat/my', {
           headers,
         });

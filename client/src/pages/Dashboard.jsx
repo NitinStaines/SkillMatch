@@ -52,13 +52,13 @@ const Dashboard = () => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
       try {
-        const userRes = await axios.get("http://localhost:5000/api/auth/me", {
+        const userRes = await axios.get("https://skillmatch-backend-cwdm.onrender.com/api/auth/me", {
           headers: { Authorization: `${token}` },
         });
         setUser(userRes.data.user);
 
         const connectionsRes = await axios.get(
-          "http://localhost:5000/api/connections/my",
+          "https://skillmatch-backend-cwdm.onrender.com/api/connections/my",
           {
             headers: { Authorization: `${token}` },
           }
