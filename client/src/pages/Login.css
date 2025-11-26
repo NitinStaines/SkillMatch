@@ -1,0 +1,12 @@
+.Login input {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+}
+.Login button{
+    width: 100px;
+}
+
+.Login {
+    margin-top: 15px;
+}
